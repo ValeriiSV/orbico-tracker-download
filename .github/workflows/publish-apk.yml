@@ -28,9 +28,10 @@ jobs:
           fi
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
-      - name: Download APK
+      - name: Download APK package
         run: |
-          curl -fL --retry 4 --retry-delay 2 "${{ steps.source.outputs.url }}" -o Orbico-Tracker.apk
+          curl -fL --retry 4 --retry-delay 2 "${{ steps.source.outputs.url }}" -o source.zip
+          unzip -o source.zip
           test -s Orbico-Tracker.apk
           file Orbico-Tracker.apk
 
