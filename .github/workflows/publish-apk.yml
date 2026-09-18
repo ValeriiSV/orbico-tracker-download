@@ -1,0 +1,42 @@
+name: Publish Orbico Tracker APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'APK_URL.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read source URL
+        id: source
+        shell: bash
+        run: |
+          URL="$(tr -d '\r\n' < APK_URL.txt)"
+          if [ -z "$URL" ]; then
+            echo "APK source URL is empty."
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Download APK
+        run: |
+          curl -fL --retry 4 --retry-delay 2 "${{ steps.source.outputs.url }}" -o Orbico-Tracker.apk
+          test -s Orbico-Tracker.apk
+          file Orbico-Tracker.apk
+
+      - name: Publish latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" Orbico-Tracker.apk             --repo "${GITHUB_REPOSITORY}"             --title "Orbico Tracker ${TAG}"             --notes "Latest ORBICO Merchandising Tracker Android APK."             --latest
